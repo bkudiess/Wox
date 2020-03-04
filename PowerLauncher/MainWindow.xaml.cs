@@ -295,6 +295,26 @@ namespace PowerLauncher
             }
         }
 
+        private void WindowsXamlHost_ChildChanged(object sender, EventArgs e)
+        {
+            // Hook up x:Bind source.
+            global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost windowsXamlHost =
+                sender as global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost;
+            global::PowerLauncher.UI.SearchBox userControl =
+                windowsXamlHost.GetUwpInternalObject() as global::PowerLauncher.UI.SearchBox;
 
+            if (userControl != null)
+            {
+                userControl.XamlIslandMessage = this.WPFMessage;
+            }
+        }
+
+        public string WPFMessage
+        {
+            get
+            {
+                return "Binding from WPF to UWP XAML";
+            }
+        }
     }
 }
