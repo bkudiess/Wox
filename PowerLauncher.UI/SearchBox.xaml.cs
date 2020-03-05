@@ -24,5 +24,11 @@ namespace PowerLauncher.UI
         {
             this.InitializeComponent();
         }
+
+        private void SearchBar_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+
+        }
     }
+
 }

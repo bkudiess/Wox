@@ -17,6 +17,7 @@ using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using NotifyIcon = System.Windows.Forms.NotifyIcon;
+using Microsoft.Toolkit.Wpf.UI.XamlHost;
 
 namespace PowerLauncher
 {
@@ -295,26 +296,30 @@ namespace PowerLauncher
             }
         }
 
+        private PowerLauncher.UI.SearchBox? _tvFoundBooks = null;
         private void WindowsXamlHost_ChildChanged(object sender, EventArgs e)
         {
-            // Hook up x:Bind source.
-            global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost windowsXamlHost =
-                sender as global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost;
-            global::PowerLauncher.UI.SearchBox userControl =
-                windowsXamlHost.GetUwpInternalObject() as global::PowerLauncher.UI.SearchBox;
+            //// Hook up x:Bind source.
+            //global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost windowsXamlHost =
+            //    sender as global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost;
+            //global::PowerLauncher.UI.SearchBox userControl =
+            //    windowsXamlHost.GetUwpInternalObject() as global::PowerLauncher.UI.SearchBox;
 
-            if (userControl != null)
-            {
-                userControl.XamlIslandMessage = this.WPFMessage;
-            }
-        }
+            //if (userControl != null)
+            //{
+            //    //userControl.XamlIslandMessage = this.WPFMessage;
+            //}
+            if (sender == null) return;
 
-        public string WPFMessage
-        {
-            get
-            {
-                return "Binding from WPF to UWP XAML";
-            }
+            var host = (WindowsXamlHost)sender;
+            _tvFoundBooks = (PowerLauncher.UI.SearchBox)host.Child;
+            _tvFoundBooks.ItemInvoked += _tvFoundBooks_ItemInvoked;
+            _tvFoundBooks.ItemsSource = DataSource;
+
+            const string Xaml = "<DataTemplate xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><TreeViewItem ItemsSource=\"{Binding Children}\" Content=\"{Binding Name}\"/></DataTemplate>";
+            var xaml = XamlReader.Load(Xaml);
+            _tvFoundBooks.ItemTemplate = xaml as Windows.UI.Xaml.DataTemplate;
+
         }
     }
 }
