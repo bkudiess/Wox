@@ -19,16 +19,12 @@ namespace PowerLauncher.UI
 {
     public sealed partial class SearchBox : UserControl
     {
-        public string XamlIslandMessage { get; set; }
+
         public SearchBox()
         {
             this.InitializeComponent();
         }
 
-        private void SearchBar_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-        {
-
-        }
     }
 
 }

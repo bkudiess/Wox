@@ -18,6 +18,7 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using NotifyIcon = System.Windows.Forms.NotifyIcon;
 using Microsoft.Toolkit.Wpf.UI.XamlHost;
+//using Windows.UI.Xaml;
 
 namespace PowerLauncher
 {
@@ -66,26 +67,7 @@ namespace PowerLauncher
             InitializePosition();
             // since the default main window visibility is visible
             // so we need set focus during startup
-            QueryTextBox.Focus();
 
-            _viewModel.PropertyChanged += (o, e) =>
-            {
-                if (e.PropertyName == nameof(MainViewModel.MainWindowVisibility))
-                {
-                    if (Visibility == Visibility.Visible)
-                    {
-                        Activate();
-                        QueryTextBox.Focus();
-                        UpdatePosition();
-                        _settings.ActivateTimes++;
-                        if (!_viewModel.LastQuerySelected)
-                        {
-                            QueryTextBox.SelectAll();
-                            _viewModel.LastQuerySelected = true;
-                        }
-                    }
-                }
-            };
             _settings.PropertyChanged += (o, e) =>
             {
                 if (e.PropertyName == nameof(Settings.HideNotifyIcon))
@@ -255,7 +237,7 @@ namespace PowerLauncher
             var screen = Screen.FromPoint(System.Windows.Forms.Cursor.Position);
             var dip1 = WindowsInteropHelper.TransformPixelsToDIP(this, 0, screen.WorkingArea.Y);
             var dip2 = WindowsInteropHelper.TransformPixelsToDIP(this, 0, screen.WorkingArea.Height);
-            var top = (dip2.Y - QueryTextBox.ActualHeight) / 4 + dip1.Y;
+            var top = (dip2.Y - XamlHost.ActualHeight) / 4 + dip1.Y;
             return top;
         }
 
@@ -287,39 +269,43 @@ namespace PowerLauncher
             }
         }
 
-        private void OnTextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (_viewModel.QueryTextCursorMovedToEnd)
-            {
-                QueryTextBox.CaretIndex = QueryTextBox.Text.Length;
-                _viewModel.QueryTextCursorMovedToEnd = false;
-            }
-        }
-
         private PowerLauncher.UI.SearchBox? _tvFoundBooks = null;
         private void WindowsXamlHost_ChildChanged(object sender, EventArgs e)
         {
-            //// Hook up x:Bind source.
-            //global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost windowsXamlHost =
-            //    sender as global::Microsoft.Toolkit.Wpf.UI.XamlHost.WindowsXamlHost;
-            //global::PowerLauncher.UI.SearchBox userControl =
-            //    windowsXamlHost.GetUwpInternalObject() as global::PowerLauncher.UI.SearchBox;
-
-            //if (userControl != null)
-            //{
-            //    //userControl.XamlIslandMessage = this.WPFMessage;
-            //}
             if (sender == null) return;
 
             var host = (WindowsXamlHost)sender;
             _tvFoundBooks = (PowerLauncher.UI.SearchBox)host.Child;
-            _tvFoundBooks.ItemInvoked += _tvFoundBooks_ItemInvoked;
-            _tvFoundBooks.ItemsSource = DataSource;
+            _tvFoundBooks.DataContext = _viewModel;
+            _tvFoundBooks.QueryTextBox.TextChanged += QueryTextBox_TextChanged;
 
-            const string Xaml = "<DataTemplate xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><TreeViewItem ItemsSource=\"{Binding Children}\" Content=\"{Binding Name}\"/></DataTemplate>";
-            var xaml = XamlReader.Load(Xaml);
-            _tvFoundBooks.ItemTemplate = xaml as Windows.UI.Xaml.DataTemplate;
+            _tvFoundBooks.QueryTextBox.Focus(Windows.UI.Xaml.FocusState.Programmatic);
 
+            _viewModel.PropertyChanged += (o, e) =>
+            {
+                if (e.PropertyName == nameof(MainViewModel.MainWindowVisibility))
+                {
+                    if (Visibility == System.Windows.Visibility.Visible)
+                    {
+                        Activate();
+                        _tvFoundBooks.QueryTextBox.Focus(Windows.UI.Xaml.FocusState.Programmatic);
+                        UpdatePosition();
+                        _settings.ActivateTimes++;
+                        if (!_viewModel.LastQuerySelected)
+                        {
+                            _viewModel.LastQuerySelected = true;
+                        }
+                    }
+                }
+            };
+        }
+
+        private void QueryTextBox_TextChanged(Windows.UI.Xaml.Controls.AutoSuggestBox sender, Windows.UI.Xaml.Controls.AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (_viewModel.QueryTextCursorMovedToEnd)
+            {
+                _viewModel.QueryTextCursorMovedToEnd = false;
+            }
         }
     }
 }
